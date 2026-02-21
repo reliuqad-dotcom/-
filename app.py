@@ -1,3 +1,5 @@
+import os
+import uvicorn
 from fastapi import FastAPI, Request, Depends, Form, Query
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -7,19 +9,21 @@ from datetime import datetime, timedelta, timezone
 import yfinance as yf
 import plotly.graph_objects as go
 import pandas as pd
-import requests # 맨 위에 import requests 추가하세요!
+import requests
 
-# ===== DB와 모델 import =====
+# 1. DB 및 모델 import (최상단으로 이동)
 from database import SessionLocal, engine, Base
 from models import Stock, Transaction
 
+# 2. 앱 초기화 및 DB 테이블 생성
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
-
-# 한국시간(KST)
-KST = timezone(timedelta(hours=9))
 Base.metadata.create_all(bind=engine)
 
+# 한국시간(KST) 설정
+KST = timezone(timedelta(hours=9))
+
+# 3. 데이터 베이스 세션 의존성
 def get_db():
     db = SessionLocal()
     try:
@@ -27,7 +31,7 @@ def get_db():
     finally:
         db.close()
 
-# 1. 전역 변수 설정 (최상단 배치)
+# 4. 전역 변수 설정
 ticker_map = {
     "삼성전자": {"ticker": "005930.KS", "currency": "KRW"},
     "애플":      {"ticker": "AAPL",      "currency": "USD"},
@@ -276,10 +280,8 @@ def reset_data(db: Session = Depends(get_db)):
     db.commit()
     return RedirectResponse(url="/", status_code=303)
 
-import os
 
 if __name__ == "__main__":
-    # 환경 변수에서 포트를 가져오고, 없으면 5000번을 사용합니다.
-    port = int(os.environ.get("PORT", 5000))
-    # host를 0.0.0.0으로 설정해야 외부에서 접속이 가능합니다.
-    app.run(host="0.0.0.0", port=port)
+    port = int(os.environ.get("PORT", 8000))
+    # app.run 대신 uvicorn.run을 사용합니다.
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)
