@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>주식 시뮬레이터</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         :root { --primary: #2563eb; --danger: #ef4444; --success: #10b981; --gray: #64748b; }
         body { font-family: 'Pretendard', sans-serif; background-color: #f3f4f6; margin: 20px; color: #1e293b; line-height: 1.5; }
@@ -88,7 +88,42 @@
             box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
         }
 
-        @media (max-width: 1200px) { .top-row { grid-template-columns: repeat(2, 1fr); } .bottom-row { grid-template-columns: 1fr; } }
+        /* 모바일 최적화 스타일 */
+@media (max-width: 768px) {
+    /* 1. 전체 컨테이너 여백 조정 */
+    .container {
+        padding: 10px;
+        width: 100% !important;
+    }
+
+    /* 2. 대시보드 카드(자산 현황 등)를 세로로 나열 */
+    .summary-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    /* 3. 테이블 찌그러짐 방지: 가로 스크롤 허용 */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        min-width: 600px; /* 테이블이 너무 압축되지 않게 최소 너비 고정 */
+    }
+
+    /* 4. 차트 높이 조절 */
+    #chart-container {
+        height: 300px !important;
+    }
+
+    /* 5. 버튼 및 입력창 크기 최적화 (터치하기 편하게) */
+    btn, input, select {
+        font-size: 16px !important; /* 모바일 줌 현상 방지 */
+        padding: 12px !important;
+    }
+}
     </style>
 </head>
 <body>
