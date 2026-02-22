@@ -32,7 +32,15 @@ def get_user_id(request: Request, response: Response):
     user_id = request.cookies.get("user_id")
     if not user_id:
         user_id = str(uuid.uuid4())
-        response.set_cookie(key="user_id", value=user_id, max_age=31536000, httponly=True, samesite="lax")
+        # 배포 환경을 위해 samesite를 'Lax'로, 보안 환경에 따라 설정을 강화합니다.
+        response.set_cookie(
+            key="user_id", 
+            value=user_id, 
+            max_age=31536000, 
+            httponly=True, 
+            samesite="lax",
+            secure=True  # Render는 HTTPS를 사용하므로 True가 안전합니다.
+        )
     return user_id
 
 # 차트 및 마켓 정보 참조용 고정 데이터
