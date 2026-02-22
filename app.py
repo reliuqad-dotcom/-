@@ -55,7 +55,7 @@ def dashboard(request: Request, response: Response, db: Session = Depends(get_db
     # 1. 초기 종목 세팅 (DB 비어있을 시) - 기존 로직 유지
     stocks_in_db = db.query(Stock).filter(Stock.user_id == uid).all()
     if not stocks_in_db:
-        for namen info in ticker_map.items():
+        for name, info in ticker_map.items():
             db.add(Stock(
                 name=name, 
                 user_id=uid, 

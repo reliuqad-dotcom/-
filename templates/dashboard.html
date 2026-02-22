@@ -135,6 +135,19 @@
         font-weight: bold;
         color: #64748b;
     }
+/* [추가] 카드들을 세로로 1줄씩 정렬 */
+    .top-row, .bottom-row {
+        grid-template-columns: 1fr !important;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* 헤더 날짜 영역 조정 */
+    .header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 15px;
+    }
 }
     </style>
 </head>
