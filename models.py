@@ -7,6 +7,8 @@ class Stock(Base):
     __tablename__ = "stocks"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
+    ticker = Column(String)    # 추가
+    currency = Column(String)  # 추가
     user_id = Column(String, index=True)
 
     transactions = relationship("Transaction", back_populates="stock", cascade="all, delete-orphan")

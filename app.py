@@ -55,10 +55,20 @@ def dashboard(request: Request, response: Response, db: Session = Depends(get_db
     # 1. 초기 종목 세팅 (DB 비어있을 시) - 기존 로직 유지
     stocks_in_db = db.query(Stock).filter(Stock.user_id == uid).all()
     if not stocks_in_db:
-        for name in ticker_map.keys():
-            db.add(Stock(name=name, user_id=uid))
+        for namen info in ticker_map.items():
+            db.add(Stock(
+                name=name, 
+                user_id=uid, 
+                ticker=info["ticker"], 
+                currency=info["currency"]
+            ))
         db.commit()
         stocks_in_db = db.query(Stock).filter(Stock.user_id == uid).all()
+
+    current_user_ticker_map = {
+        s.name: {"ticker": s.ticker, "currency": s.currency} 
+        for s in stocks_in_db
+    }
 
     user_stock_names = [s.name for s in stocks_in_db]
     market_info = {}
@@ -240,11 +250,18 @@ def add_tx(request: Request, name: str = Form(...), type: str = Form(...), price
 @app.post("/add_stock")
 def add_stock(request: Request, name: str = Form(...), ticker: str = Form(...), currency: str = Form(...), db: Session = Depends(get_db)):
     uid = get_user_id(request)
-    if name not in ticker_map:
-        ticker_map[name] = {"ticker": ticker, "currency": currency}
-        
-    if not db.query(Stock).filter(Stock.name == name, Stock.user_id == uid).first():
-        db.add(Stock(name=name, user_id=uid))
+    if not uid: return RedirectResponse(url="/", status_code=303)
+
+    # 사용자별로 중복 확인 후 상세 정보까지 저장
+    existing = db.query(Stock).filter(Stock.name == name, Stock.user_id == uid).first()
+    if not existing:
+        new_stock = Stock(
+            name=name, 
+            ticker=ticker, 
+            currency=currency, 
+            user_id=uid
+        )
+        db.add(new_stock)
         db.commit()
     return RedirectResponse(url="/", status_code=303)
 
