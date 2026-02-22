@@ -88,25 +88,50 @@
             box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
         }
 
-        /* 모바일 최적화 스타일 */
-@media (max-width: 768px) {
-    /* 차트 컨테이너가 너무 찌그러지지 않게 최소 높이 지정 */
-    .chart-container { 
-        height: 400px !important; 
-        min-height: 350px;
-    }
+/* [1] 기본값: PC 화면 (너비 1101px 이상) */
+.top-row { 
+    display: grid; 
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 15px; 
+    margin-bottom: 20px; 
 }
-    /* 1. 전체 레이아웃 1열 정렬 */
+.bottom-row { 
+    display: grid; 
+    grid-template-columns: 320px 1fr; 
+    gap: 15px; 
+}
+/* PC에서는 테이블 형식을 유지 */
+table { display: table; width: 100%; }
+tr { display: table-row; }
+td, th { display: table-cell; }
+
+
+/* [2] 태블릿 단계 (너비 769px ~ 1100px) */
+@media (max-width: 1100px) {
+    .top-row {
+        grid-template-columns: repeat(2, 1fr) !important; /* 2x2 배치 */
+    }
+    .bottom-row {
+        grid-template-columns: 1fr !important; /* 자산요약과 차트를 위아래로 */
+    }
+    /* 태블릿까지는 아직 '표' 형태를 유지합니다 */
+}
+
+
+/* [3] 모바일 단계 (너비 768px 이하) */
+@media (max-width: 768px) {
+    /* 1. 기본 레이아웃 (세로로 쌓기) */
     .top-row, .bottom-row {
-        grid-template-columns: 1fr !important;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 15px;
     }
 
-    /* 2. 테이블을 카드 리스트로 변환 */
+    /* =======================================================
+       2. 일반 테이블 -> "카드형" 변환 (내 포트폴리오, 거래 등에 적용)
+       ======================================================= */
     table, thead, tbody, th, td, tr { display: block; }
-    thead { display: none; } /* 헤더 숨기기 */
+    thead { display: none; } 
 
     tr {
         background: #ffffff;
@@ -118,51 +143,122 @@
     }
 
     td {
-        display: flex !important;
-        justify-content: space-between !important;
+        display: flex;
+        justify-content: space-between;
         align-items: center;
-        padding: 10px 0 !important;
-        border-bottom: 1px solid #f8fafc !important;
-        text-align: right !important; /* 값은 오른쪽 */
+        padding: 10px 0;
+        border-bottom: 1px dashed #f8fafc;
+        text-align: right;
     }
 
-    td:last-child { border-bottom: none !important; justify-content: center !important; }
+    td:last-child { border-bottom: none; justify-content: center; }
 
-    /* 3. 라벨(항목명) 강조 */
     td::before {
         content: attr(data-label);
         font-weight: 700;
-        color: #94a3b8; /* 연한 회색으로 항목명 표시 */
+        color: #94a3b8;
         font-size: 0.8rem;
         text-align: left;
     }
 
-    /* 4. 차트 높이 조절 (모바일에서 너무 길면 불편함) */
-    .chart-container { height: 400px; }
 
-    /* 5. 헤더 및 날짜 영역 최적화 */
-    .header { gap: 10px; margin-bottom: 15px; }
-    #dateContainer { 
-        width: 100%; 
-        flex-direction: row; 
-        justify-content: space-between; 
-        padding: 10px;
+    /* =======================================================
+       3. 🚨 오직 "시장 현황" 전용 철벽 Grid 방어 (카드화 무시!)
+       ======================================================= */
+/* --- [시장 현황] 강제 레이아웃 수정 --- */
+#market-table {
+    display: table !important; /* block 대신 table 유지 */
+    width: 100% !important;
+    border-collapse: collapse;
+    table-layout: fixed; /* 컬럼 너비 고정으로 삐져나감 방지 */
+}
+
+/* 시장 현황 테이블 스크롤 및 잘림 방지 */
+#market-table {
+    display: table !important;
+    width: 100% !important;
+    table-layout: fixed; /* 테이블 너비 고정 */
+}
+
+#market-table td {
+    overflow: hidden;
+    text-overflow: ellipsis; /* 이름 길면 ... 처리 */
+    white-space: nowrap;
+}
+
+#market-table thead {
+    display: table-header-group !important; /* 헤더 정상화 */
+}
+
+#market-table tbody {
+    display: table-row-group !important; /* 데이터 영역 정상화 */
+}
+
+#market-table tr {
+    display: table-row !important; /* flex 대신 table-row */
+    height: 40px; /* 최소 높이 보장 */
+}
+
+#market-table th, #market-table td {
+    display: table-cell !important; /* cell 구조 유지 */
+    vertical-align: middle;
+    padding: 8px 4px !important;
+    font-size: 0.85rem !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+}
+
+/* 제목줄 스타일 정리 */
+#market-table th {
+    font-size: 0.75rem !important; /* rem 앞에 수치 추가 */
+    color: #94a3b8;
+    background: #f8fafc;
+}
+
+/* 컬럼별 너비 및 정렬 강제 */
+#market-table td:nth-child(1) { width: 45%; text-align: left !important; padding-left: 10px !important; } /* 종목명 */
+#market-table td:nth-child(2) { width: 40%; text-align: right !important; padding-right: 15px !important; } /* 가격 */
+#market-table td:nth-child(3) { width: 15%; text-align: center !important; } /* 삭제버튼 */
+
+/* 가짜 라벨 제거 및 버튼 최적화 */
+#market-table td::before { content: none !important; }
+#market-table td button {
+    line-height: 1;
+    transform: scale(1.2); /* 터치하기 쉽게 약간 키움 */
+}
+
+    /* 부모 컨테이너의 여백도 함께 줄여야 효과가 큽니다 */
+    .card {
+        padding: 12px !important; /* 카드 내부 여백 축소 */
+        margin-bottom: 10px !important; /* 카드 간 간격 축소 */
     }
 
-/* [추가] 카드들을 세로로 1줄씩 정렬 */
-    .top-row, .bottom-row {
-        grid-template-columns: 1fr !important;
-        display: flex;
-        flex-direction: column;
-    }
+    /* =======================================================
+       4. 기타 화면 최적화
+       ======================================================= */
+    .chart-container { height: 400px !important; min-height: 350px; }
+    .header { flex-direction: column !important; align-items: flex-start !important; gap: 15px; }
+    #dateContainer { width: 100%; justify-content: space-between; padding: 10px; box-sizing: border-box; }
+}
 
-    /* 헤더 날짜 영역 조정 */
-    .header {
-        flex-direction: column;
-        align-items: flex-start !important;
-        gap: 15px;
+/* 검색바가 카드 밖으로 나가지 않도록 설정 */
+.card input[type="text"], 
+#ticker-input, /* 실제 ID가 있다면 추가 */
+.search-input { /* 실제 클래스가 있다면 추가 */
+    width: 100% !important;      /* 부모 너비에 꽉 채움 */
+    box-sizing: border-box !important; /* 패딩과 테두리를 너비에 포함 (핵심!) */
+    max-width: 100% !important;   /* 최대 너비 제한 */
+    display: block !important;
+    margin-bottom: 10px;          /* 아래쪽 요소와 간격 */
+}
+
+/* 모바일 화면에서 특히 더 신경 쓰기 */
+@media (max-width: 768px) {
+    .card input[type="text"] {
+        font-size: 16px; /* 모바일에서 입력 시 화면 확대 방지 */
+        padding: 10px;   /* 터치하기 편한 높이 */
     }
 }
+
     </style>
 </head>
 <body>
@@ -236,9 +332,10 @@
     <div class="card">
         <h2>📡 시장 현황 <span style="font-size: 0.7rem; color: var(--gray); font-weight: 400;">($: {{ usd_rate }})</span></h2>
         <div style="overflow-y: auto; max-height: 350px;">
-            <table>
+            <table id="market-table">
                 <thead><tr><th>종목</th><th>가격</th><th>관리</th></tr></thead>
-                <tbody>
+                <tbody id="market-list">
+
 {% for name, info in market_info.items() %}
 <tr>
     <td data-label="종목" style="font-weight:600; text-align: left;">{{ name }}</td>
@@ -274,8 +371,7 @@
                 <option value="USD">USD (미국주식)</option>
                 <option value="KRW">KRW (국내주식)</option>
             </select>
-            <button type="submit" class="btn-primary" style="margin-top:0; padding:8px;">관심 종목 등록</button>
-        </form>
+            <button type="submit" onclick="handleAddStock(event)" class="btn-primary">관심 종목 등록</button>     </form>
     </div>
 
     <div class="card">
@@ -510,6 +606,60 @@ function selectStock(t, n, ex) {
     document.getElementById('tickerSearch').value = t;
 }
 
+async function handleAddStock(event) {
+    if (event) event.preventDefault(); 
+
+    const ticker = document.getElementById('selectedTicker').value;
+    const name = document.getElementById('selectedName').value;
+    const currency = document.querySelector('select[name="currency"]').value;
+
+    if (!ticker || !name) {
+        alert("종목을 먼저 선택해주세요.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('ticker', ticker);
+    formData.append('name', name);
+    formData.append('currency', currency);
+
+    try {
+        const res = await fetch('/add_stock', {
+            method: 'POST',
+            body: formData,
+            // 캐시 문제 방지
+            cache: 'no-cache'
+        });
+
+        // 303 Redirect든 200 OK든 성공하면 페이지를 강제 새로고침하여 
+        // 서버의 최신 목록()을 다시 불러오게 합니다.
+        if (res.ok || res.redirected) {
+            // 단순 href 이동보다 reload가 현재 파라미터(날짜 등) 유지에 유리할 수 있습니다.
+            window.location.reload(true); 
+        } else {
+            const errorText = await res.text();
+            alert("추가 실패: " + errorText);
+        }
+    } catch (e) {
+        console.error("에러 발생:", e);
+        alert("서버 연결에 실패했습니다.");
+    }
+}
+
+// 시장 현황 테이블에 새로운 행을 그리는 함수 (우리가 만든 디자인 적용)
+function updateMarketTable(ticker, name, price) {
+    const tbody = document.querySelector('#market-table tbody');
+    if (!tbody) return;
+
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>${name}</td>
+        <td>${price}</td>
+        <td><button class="delete-btn" onclick="deleteStock('${ticker}', this)">X</button></td>
+    `;
+    tbody.appendChild(row);
+}
+
 // 오늘 날짜로 즉시 복귀하는 함수
 function resetToToday() {
     const today = new Date();
@@ -548,6 +698,8 @@ async function removeStock(stockName) {
         alert("서버와 통신 중 오류가 발생했습니다.");
     }
 }
+
+
 
     function confirmReset() { if(confirm("모든 데이터가 초기화됩니다.")) { const f=document.createElement('form'); f.method='POST'; f.action='/reset'; document.body.appendChild(f); f.submit(); } }
 

@@ -44,7 +44,7 @@ ticker_map = {
 }
 
 @app.get("/")
-def dashboard(request: Request, response: Response, db: Session = Depends(get_db), target_date: str = Query(None)):
+def dashboard(request: Request, db: Session = Depends(get_db), target_date: str = Query(None)):
     # [수정] 인자에서 response 제거하고 내부에서 생성하도록 변경
     uid = get_user_id(request)
     if not uid:
@@ -85,20 +85,32 @@ def dashboard(request: Request, response: Response, db: Session = Depends(get_db
             if isinstance(usd_data.columns, pd.MultiIndex): usd_data.columns = usd_data.columns.get_level_values(0)
             usd_rate = float(usd_data['Close'].dropna().iloc[-1])
 
-        for name in user_stock_names:
-            info = ticker_map.get(name)
-            if not info: continue
-            h = yf.download(info["ticker"], start=start_dt, end=end_dt, progress=False, threads=False)
-            if not h.empty:
-                if isinstance(h.columns, pd.MultiIndex): h.columns = h.columns.get_level_values(0)
-                p = float(h['Close'].dropna().iloc[-1])
-                market_info[name] = {
-                    "price": p, "currency": info["currency"],
-                    "currency_symbol": "$" if info["currency"] == "USD" else "￦"
-                }
-    except Exception as e:
-        print(f"Market Data Fetch Error: {e}")
+        for stock_item in stocks_in_db:
+            try:
+                # 1. 이제 ticker_map을 거치지 않고 DB의 ticker를 직접 씁니다.
+                h = yf.download(stock_item.ticker, start=start_dt, end=end_dt, progress=False, threads=False)
+                
+                if not h.empty:
+                    if isinstance(h.columns, pd.MultiIndex): 
+                        h.columns = h.columns.get_level_values(0)
+                    p = float(h['Close'].dropna().iloc[-1])
+                    
+                    # 2. market_info의 Key를 DB에 저장된 이름(stock_item.name)으로 고정합니다.
+                    market_info[stock_item.name] = {
+                        "price": p, 
+                        "currency": stock_item.currency,
+                        "currency_symbol": "$" if stock_item.currency == "USD" else "₩"
+                    }
+            except Exception as inner_e:
+                print(f"{stock_item.name}({stock_item.ticker}) 조회 실패: {inner_e}")
+        # [여기까지가 반복문 끝입니다]
 
+    except Exception as e:
+        print(f"전체 마켓 데이터 로드 오류: {e}")
+
+    # --- 여기서부터는 기존 코드와 동일 (에러 났던 109번 줄 지점) ---
+    initial_cash = 10_000_000
+    all_tx = db.query(Transaction).filter(Transaction.user_id == uid).all()
     # 자산 및 포트폴리오 로직 - 기존 로직 유지
     initial_cash = 10_000_000
     all_tx = db.query(Transaction).filter(Transaction.user_id == uid).all()
@@ -113,7 +125,7 @@ def dashboard(request: Request, response: Response, db: Session = Depends(get_db
             if not stock_obj: continue
             
             amt = tx.price * tx.quantity
-            if stock_obj.name in ticker_map and ticker_map[stock_obj.name]["currency"] == "USD":
+            if stock_obj and stock_obj.currency == "USD":
                 amt *= usd_rate
             
             if tx.type == "BUY": cash_flow -= amt
