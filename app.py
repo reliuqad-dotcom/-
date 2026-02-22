@@ -138,7 +138,6 @@ def dashboard(request: Request, response: Response, db: Session = Depends(get_db
 
     total_asset = cash_flow + total_stock_value_krw
 
-    # [수정] 응답 객체를 생성하고 보안 쿠키(secure=True)를 설정하여 리턴
     response = templates.TemplateResponse("dashboard.html", {
         "request": request,
         "available_stocks": user_stock_names,
@@ -151,19 +150,16 @@ def dashboard(request: Request, response: Response, db: Session = Depends(get_db
         "usd_rate": round(usd_rate, 2),
         "target_date": display_date
     })
-    response.set_cookie(key="user_id", value=uid, secure=True, httponly=True, samesite="lax")
-    return response
 
-    # Render(HTTPS)에서 이름표(user_id)를 유지하기 위한 핵심 설정
+    # 쿠키 설정 (하나로 통합)
     response.set_cookie(
         key="user_id", 
         value=uid, 
-        max_age=31536000, 
+        max_age=31536000, # 1년 유지
         httponly=True, 
         samesite="lax", 
-        secure=True  # 이 부분이 있어야 Render에서 유저를 기억합니다.
+        secure=True
     )
-
     return response
 
 # --- 차트 로직 (사용자 기존 코드 100% 보존) ---
@@ -243,8 +239,10 @@ def add_tx(request: Request, name: str = Form(...), type: str = Form(...), price
 
 @app.post("/add_stock")
 def add_stock(request: Request, name: str = Form(...), ticker: str = Form(...), currency: str = Form(...), db: Session = Depends(get_db)):
-    uid = get_user_id(request, Response())
-    if name not in ticker_map: ticker_map[name] = {"ticker": ticker, "currency": currency}
+    uid = get_user_id(request)
+    if name not in ticker_map:
+        ticker_map[name] = {"ticker": ticker, "currency": currency}
+        
     if not db.query(Stock).filter(Stock.name == name, Stock.user_id == uid).first():
         db.add(Stock(name=name, user_id=uid))
         db.commit()
