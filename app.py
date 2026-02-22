@@ -28,7 +28,7 @@ def get_db():
     finally:
         db.close()
 
-def get_user_id(request: Request, response: Response):
+def get_user_id(request: Request):
     """쿠키에서 ID를 읽어오고, 없으면 새로 생성만 합니다."""
     user_id = request.cookies.get("user_id")
     if not user_id:
@@ -46,7 +46,9 @@ ticker_map = {
 @app.get("/")
 def dashboard(request: Request, response: Response, db: Session = Depends(get_db), target_date: str = Query(None)):
     # [수정] 인자에서 response 제거하고 내부에서 생성하도록 변경
-    uid = get_user_id(request, response)
+    uid = get_user_id(request)
+    if not uid:
+        uid = str(uuid.uuid4())
     now_kst = datetime.now(KST)
     display_date = target_date if target_date else now_kst.strftime("%Y-%m-%d")
 
@@ -149,6 +151,8 @@ def dashboard(request: Request, response: Response, db: Session = Depends(get_db
         "usd_rate": round(usd_rate, 2),
         "target_date": display_date
     })
+    response.set_cookie(key="user_id", value=uid, secure=True, httponly=True, samesite="lax")
+    return response
 
     # Render(HTTPS)에서 이름표(user_id)를 유지하기 위한 핵심 설정
     response.set_cookie(
@@ -229,13 +233,13 @@ def get_chart(stock_name: str, period: str, end_date: str = Query(None)):
 
 # --- POST 액션 라우터 ---
 @app.post("/add_transaction")
-def add_tx(request: Request, response: Response, name: str = Form(...), type: str = Form(...), price: float = Form(...), quantity: int = Form(...), db: Session = Depends(get_db)):
-    uid = get_user_id(request, response)
+def add_tx(request: Request, name: str = Form(...), type: str = Form(...), price: float = Form(...), quantity: int = Form(...), db: Session = Depends(get_db)):
+    uid = get_user_id(request)
     stock = db.query(Stock).filter(Stock.name == name, Stock.user_id == uid).first()
     if stock:
         db.add(Transaction(user_id=uid, stock_id=stock.id, type=type, price=price, quantity=quantity, date=datetime.now(KST)))
         db.commit()
-    return RedirectResponse(url=request.headers.get("referer", "/"), status_code=303)
+    return RedirectResponse(url= "/", status_code=303)
 
 @app.post("/add_stock")
 def add_stock(request: Request, name: str = Form(...), ticker: str = Form(...), currency: str = Form(...), db: Session = Depends(get_db)):
