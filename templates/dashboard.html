@@ -1,108 +1,123 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
+    <meta charset="UTF-8">
     <title>주식 시뮬레이터</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        /* 1. 기본 레이아웃 및 폰트 설정 */
-        body { font-family: 'Pretendard', -apple-system, sans-serif; background-color: #f3f4f6; margin: 30px; color: #1e293b; line-height: 1.6; }
+        :root { --primary: #2563eb; --danger: #ef4444; --success: #10b981; --gray: #64748b; }
+        body { font-family: 'Pretendard', sans-serif; background-color: #f3f4f6; margin: 20px; color: #1e293b; line-height: 1.5; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 20px; }
-        .header h1 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.02em; margin: 0; }
-
-        /* 2. 상단 4단 그리드 (여백 확보) */
-        .top-row { 
-            display: grid; 
-            grid-template-columns: repeat(4, 1fr); 
-            gap: 20px; 
-            margin-bottom: 25px;
-        }
-
-        /* 3. 하단 2단 그리드 */
-        .bottom-row { 
-            display: grid; 
-            grid-template-columns: 320px 1fr; 
-            gap: 20px; 
-        }
-
-        /* 4. 카드 디자인 */
-        .card { 
-            background: white; 
-            padding: 24px; 
-            border-radius: 16px; 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .card h2 { 
-            margin-top: 0; 
-            font-size: 1.1rem; 
-            font-weight: 700;
-            color: #334155; 
-            border-bottom: 2px solid #f1f5f9; 
-            padding-bottom: 14px; 
-            margin-bottom: 18px; 
+        .flex-row { 
             display: flex; 
-            justify-content: space-between; 
+            gap: 6px; 
             align-items: center; 
-        }
-
-        /* 5. 입력 폼 디자인 (한 줄 유지 핵심) */
-        .input-group { margin-bottom: 14px; position: relative; }
-        .label { font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block; }
-        
-        .flex-row { display: flex; align-items: center; gap: 6px; } /* 버튼-입력창 간격 */
-        
-        select, input { 
             width: 100%; 
-            padding: 10px 12px; 
-            border: 1px solid #e2e8f0; 
-            border-radius: 10px; 
-            font-size: 14px; 
-            box-sizing: border-box;
-            background-color: #f8fafc;
-            min-width: 0; /* flex 환경에서 줄어들 수 있게 설정 */
         }
-        
-        /* 6. 버튼 스타일 */
-        .btn-primary { background: #2563eb; color: white; border: none; width: 100%; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    
+        .flex-row input { 
+            flex-grow: 1; 
+            min-width: 0;
+        }
+
         .btn-small { 
-            background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; 
-            padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600;
-            white-space: nowrap; flex-shrink: 0; /* 줄바꿈 방지 및 크기 고정 */
+            padding: 6px 10px; 
+            border-radius: 6px; 
+            border: 1px solid #e2e8f0; 
+            cursor: pointer; 
+            font-size: 11px; 
+            font-weight: 500; 
+            background: white;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
-        /* 7. 실시간 계산 영역 */
-        .calc-box { 
-            background: #f1f5f9; padding: 16px; border-radius: 12px; 
-            margin: 5px 0 15px 0; border: 1px solid #e2e8f0;
+        .cash-form-row {
+            display: flex;
+            gap: 4px;
+            width: 100%;
         }
+        .cash-form-row input { flex: 1; }
+        .cash-form-row .btn-small { flex-shrink: 0; }
 
-        /* 테이블 및 기타 스타일 유지 */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .top-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .bottom-row { display: grid; grid-template-columns: 320px 1fr; gap: 15px; }
+
+        .card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; display: flex; flex-direction: column; position: relative; }
+        .card h2 { font-size: 1rem; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        
+        .label { font-size: 0.75rem; font-weight: 600; color: var(--gray); display: block; margin-bottom: 4px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; font-size: 13px; transition: border 0.2s; }
+        input:focus { outline: none; border-color: var(--primary); }
+        
+        .btn-primary { background: var(--primary); color: white; border: none; width: 100%; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .btn-primary:disabled { background: #cbd5e1; cursor: not-allowed; }
+        
         table { width: 100%; border-collapse: collapse; }
-        th { color: #94a3b8; font-weight: 600; padding: 10px 4px; border-bottom: 1px solid #f1f5f9; font-size: 0.75rem; }
-        td { padding: 12px 4px; border-bottom: 1px solid #f8fafc; text-align: center; font-size: 0.85rem; }
+        th { color: #94a3b8; font-size: 0.7rem; padding: 8px; text-align: center; border-bottom: 1px solid #f1f5f9; }
+        td { padding: 10px 4px; border-bottom: 1px solid #f8fafc; text-align: center; font-size: 0.85rem; }
 
-        .search-results { 
-            position: absolute; width: 100%; background: white; border: 1px solid #e2e8f0; 
-            border-radius: 10px; z-index: 100; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); 
-            max-height: 200px; overflow-y: auto; display: none; margin-top: 5px;
+        #searchResults { position: absolute; width: calc(100% - 40px); background: white; border: 1px solid #e2e8f0; border-radius: 8px; z-index: 100; display: none; margin-top: 45px; max-height: 150px; overflow-y: auto; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .search-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 12px; }
+        .search-item:hover { background: #f8fafc; color: var(--primary); }
+
+        .error-msg { color: var(--danger); font-size: 11px; font-weight: 700; margin-top: 8px; text-align: center; display: none; min-height: 16px; }
+
+        .chart-container { width: 100%; height: 670px; overflow: hidden; border-radius: 16px; background: #f8fafc; position: relative; border: 1px solid #f1f5f9; }
+        #chartFrame { width: 100%; height: 100%; border: none; }
+        
+        .period-btn, .tab-btn {
+            padding: 8px 16px;
+            border-radius: 9999px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .period-btn:hover, .tab-btn:hover { background: #f1f5f9; transform: translateY(-1px); }
+        
+        .period-btn.active, .tab-btn.active {
+            background: var(--primary) !important;
+            color: white !important;
+            border-color: var(--primary) !important;
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
         }
 
-        @media (max-width: 1400px) { .top-row { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 768px) { .top-row, .bottom-row { grid-template-columns: 1fr; } }
+        @media (max-width: 1200px) { .top-row { grid-template-columns: repeat(2, 1fr); } .bottom-row { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h1>📊 <span style="color:#2563eb">라고</span> 할 때 살 걸</h1>
-    <div style="display: flex; gap: 10px; align-items: center; background: white; padding: 8px 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-        <span class="label" style="margin:0">분석 시점</span>
-        <input type="date" id="datePicker" value="{{ target_date }}" style="width: auto; padding: 5px;">
-        <button onclick="goToDate()" class="btn-small" style="background:#3b82f6; color:white; border:none;">이동</button>
+<div class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; width: 100%;">
+    <h1 style="margin: 0; flex-shrink: 0;">📊 <span style="color:var(--primary)">라고</span> 할 때 살 걸</h1>
+    
+    <div id="dateContainer" style="background: white; padding: 10px 18px; border-radius: 16px; border: 2px solid var(--primary); display: flex; gap: 12px; align-items: center; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15); flex-shrink: 0;">
+        
+        <div style="display: flex; flex-direction: column;">
+            <span id="dateLabel" style="margin:0; font-size: 0.65rem; color: var(--primary); font-weight: 800; letter-spacing: -0.02em;">CURRENT TARGET DATE</span>
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <span style="font-size: 1.1rem;">📅</span>
+                <input type="date" id="datePicker" value="{{ target_date }}" onchange="handleDateChange()"
+                       style="padding: 2px; border: none; background: transparent; font-size: 1rem; font-weight: 800; color: #1e293b; cursor: pointer; outline: none; width: 135px;">
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 6px; align-items: center;">
+            <button id="dateBtn" onclick="goToDate()" 
+                    style="background:var(--primary); color:white; border:none; padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; white-space: nowrap; transition: all 0.3s ease;">
+                적용됨
+            </button>
+
+            <button onclick="resetToToday()" 
+                    style="background:#f1f5f9; color:#64748b; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; white-space: nowrap;">
+                복귀
+            </button>
+        </div>
     </div>
 </div>
 
@@ -110,62 +125,55 @@
     <div class="card">
         <h2>➕ 거래 실행</h2>
         <form action="/add_transaction" method="post" id="tradeForm">
-            <div class="input-group">
+            <div style="margin-bottom:10px;">
                 <span class="label">종목 선택</span>
-                <select name="name" id="stockSelect" onchange="updateTradeInfo()">
-                    {% for stock in available_stocks %}<option value="{{ stock }}">{{ stock }}</option>{% endfor %}
+                <select name="name" id="stockSelect" onchange="changeStock(this.value)">
+                    {% for stock in available_stocks %}
+                    <option value="{{ stock }}" {% if stock == available_stocks[0] %}selected{% endif %}>{{ stock }}</option>
+                    {% endfor %}
                 </select>
             </div>
-            <div class="input-group">
-                <span class="label">유형</span>
-                <select name="type" id="typeSelect" onchange="updateTradeInfo()">
-                    <option value="BUY">매수 (Buy)</option>
-                    <option value="SELL">매도 (Sell)</option>
+            <div style="margin-bottom:10px;">
+                <span class="label">거래 종류</span>
+                <select name="type" id="tradeType" onchange="validateTrade()">
+                    <option value="BUY">매수</option>
+                    <option value="SELL">매도</option>
                 </select>
             </div>
-
-            <div class="input-group">
-                <span class="label">거래 단가</span>
+            <div style="margin-bottom:10px;">
+                <span class="label">체결 단가</span>
                 <div class="flex-row">
-                    <input type="number" step="0.01" name="price" id="priceInput" placeholder="0.00" oninput="calculateTotal()">
+                    <input type="number" step="0.01" name="price" id="priceInput" oninput="validateTrade()" placeholder="0.00" required>
                     <button type="button" onclick="fillCurrentPrice()" class="btn-small">현재가</button>
                 </div>
             </div>
-
-            <div class="input-group">
+            <div style="margin-bottom:10px;">
                 <span class="label">수량</span>
                 <div class="flex-row">
-                    <input type="number" name="quantity" id="quantityInput" placeholder="0" oninput="calculateTotal()">
+                    <input type="number" name="quantity" id="quantityInput" oninput="validateTrade()" placeholder="0" required>
                     <button type="button" onclick="fillMaxQuantity()" class="btn-small" style="background:#6366f1; color:white; border:none;">전량</button>
                 </div>
             </div>
-
-            <div class="calc-box">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-size: 0.7rem; color: #64748b; font-weight: 600;">예상 금액</span>
-                    <span id="estimatedTotal" style="font-weight: 800; color: #1e293b; font-size: 0.95rem;">0원</span>
-                </div>
-                <div id="tradeWarning" style="font-size: 0.7rem; color: #ef4444; margin-top: 6px; display: none; font-weight: 600;"></div>
-            </div>
-        
+            <div id="tradeError" class="error-msg"></div>
             <button type="submit" id="submitBtn" class="btn-primary">거래 확정</button>
         </form>
     </div>
 
     <div class="card">
-        <h2>📡 시장 현황 <span style="font-size: 0.7rem; color: #94a3b8; font-weight: 400;">환율: {{ usd_rate }}</span></h2>
-        <div style="overflow-y: auto; max-height: 400px;">
+        <h2>📡 시장 현황 <span style="font-size: 0.7rem; color: var(--gray); font-weight: 400;">($: {{ usd_rate }})</span></h2>
+        <div style="overflow-y: auto; max-height: 350px;">
             <table>
-                <thead><tr><th>종목명</th><th>현재가</th><th>삭제</th></tr></thead>
+                <thead><tr><th>종목</th><th>가격</th><th>관리</th></tr></thead>
                 <tbody>
                     {% for name, info in market_info.items() %}
                     <tr>
-                        <td style="font-weight:700; color:#334155;">{{ name }}</td>
-                        <td style="color:#10b981; font-weight:700;">{{ "{:,.2f}".format(info.price) if info.currency == 'USD' else "{:,.0f}".format(info.price) }}</td>
+                        <td style="font-weight:600; text-align: left;">{{ name }}</td>
+                        <td style="color:var(--success); font-weight:700; text-align:right;">
+                            {{ info.currency_symbol }}{{ "{:,.2f}".format(info.price) if info.currency == 'USD' else "{:,.0f}".format(info.price) }}
+                        </td>
                         <td>
-                            <form action="/delete_stock/{{ name }}" method="post" onsubmit="return confirm('삭제할까요?')">
-                                <button type="submit" style="background:none; border:none; color:#cbd5e1; cursor:pointer;">✖</button>
-                            </form>
+                            <button type="button" onclick="removeStock('{{ name }}')" 
+                                    style="background:none; border:none; color:#cbd5e1; cursor:pointer; font-size: 1.2rem;">✖</button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -176,37 +184,39 @@
 
     <div class="card">
         <h2>🔍 종목 추가</h2>
-        <div class="input-group">
-            <span class="label">종목명/티커 검색</span>
-            <input type="text" id="tickerSearch" placeholder="예: 엔비디아, 삼성전자" onkeyup="doSearch(this.value)" autocomplete="off">
-            <div id="searchResults" class="search-results"></div>
+        <div style="position: relative;">
+            <span class="label">티커/종목명 검색</span>
+            <input type="text" id="tickerSearch" placeholder="AAPL, 삼성전자, 테슬라..." onkeyup="doSearch(this.value)" autocomplete="off">
+            <div id="searchResults"></div>
         </div>
-        <form action="/add_stock" method="post" id="addStockForm" style="display: none; margin-top: 10px; padding: 15px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+        <form action="/add_stock" method="post" id="addStockForm" style="display: none; margin-top:15px; padding:15px; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0;">
             <input type="hidden" name="name" id="selectedName">
             <input type="hidden" name="ticker" id="selectedTicker">
-            <div id="selectionInfo" style="font-size: 0.8rem; margin-bottom: 10px; color: #2563eb; font-weight: 700;"></div>
-            <div class="input-group">
-                <select name="currency" id="selectedCurrency">
-                    <option value="USD">USD (미국주식)</option>
-                    <option value="KRW">KRW (한국주식)</option>
-                </select>
-            </div>
-            <button type="submit" class="btn-primary" style="background:#6366f1; padding: 8px;">추가하기</button>
+            <div id="selectionInfo" style="font-size: 12px; color:var(--primary); font-weight:800; margin-bottom:10px; border-left:3px solid var(--primary); padding-left:8px;"></div>
+            <span class="label">거래 통화</span>
+            <select name="currency" style="margin-bottom:10px;">
+                <option value="USD">USD (미국주식)</option>
+                <option value="KRW">KRW (국내주식)</option>
+            </select>
+            <button type="submit" class="btn-primary" style="margin-top:0; padding:8px;">관심 종목 등록</button>
         </form>
     </div>
 
     <div class="card">
-        <h2>📁 포트폴리오</h2>
-        <div style="overflow-y: auto; max-height: 400px;">
+        <h2>📁 내 포트폴리오</h2>
+        <div style="overflow-y: auto; max-height: 350px;">
             <table>
-                <thead><tr><th>종목</th><th>보유</th><th>수익률</th></tr></thead>
+                <thead>
+                    <tr><th style="text-align:left">종목</th><th>보유</th><th style="text-align:right">현재가</th><th style="text-align:right">손익</th></tr>
+                </thead>
                 <tbody>
                     {% for item in portfolio %}
                     <tr>
-                        <td style="font-weight:600;">{{ item.name }}</td>
-                        <td>{{ item.quantity }}주</td>
-                        <td style="color: {% if item.profit_krw >= 0 %}#ef4444{% else %}#2563eb{% endif %}; font-weight: 800;">
-                            {{ item.p_str }}
+                        <td style="text-align:left; font-weight:600;">{{ item.name }}</td>
+                        <td style="font-weight:700;">{{ item.quantity }}주</td>
+                        <td style="text-align:right; font-weight:600;">{{ item.currency_symbol }}{{ item.current_price_str }}</td>
+                        <td style="text-align:right; font-weight:800; color: {% if '+' in item.profit_pct_str %}#10b981{% else %}#ef4444{% endif %};">
+                            {{ item.profit_str }}<br><small style="font-size:0.8rem;">({{ item.profit_pct_str }})</small>
                         </td>
                     </tr>
                     {% endfor %}
@@ -219,112 +229,253 @@
 <div class="bottom-row">
     <div class="card">
         <h2>💰 자산 요약</h2>
-        <div style="padding: 5px 0;">
-            <span class="label">총 추정 자산</span>
-            <div style="font-size: 1.6rem; font-weight: 900; color: #1e293b; margin-bottom: 15px;">{{ total_asset }} <small style="font-size: 0.8rem; color:#94a3b8">원</small></div>
-            
-            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem;">
-                <span style="color: #64748b;">보유 현금</span>
-                <span style="font-weight: 700;">{{ cash }}원</span>
+        <div style="font-size: 1.5rem; font-weight: 900;">{{ total_asset }} <small style="font-size:0.8rem; color:var(--gray)">원</small></div>
+        <div style="font-size: 0.9rem; color: var(--gray); margin-bottom: 20px;">현금 잔액: <strong>{{ cash }}원</strong></div>
+        <form action="/cash_transaction" method="post" style="border-top: 1px solid #f1f5f9; padding-top:20px;">
+            <span class="label">입출금 관리</span>
+            <div class="cash-form-row">
+                <input type="number" name="amount" placeholder="금액 입력" required>
+                <button type="submit" name="type" value="DEPOSIT" class="btn-small" style="background:var(--success); color:white; border:none;">입금</button>
+                <button type="submit" name="type" value="WITHDRAW" class="btn-small" style="background:var(--danger); color:white; border:none;">출금</button>
             </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 0.85rem;">
-                <span style="color: #64748b;">주식 평가액</span>
-                <span style="font-weight: 700;">{{ total_value }}원</span>
-            </div>
-            
-            <button onclick="confirmReset()" style="width:100%; padding: 8px; background:#fff1f2; color:#ef4444; border:1px solid #fee2e2; border-radius:10px; font-size: 11px; cursor:pointer; font-weight: 700;">데이터 초기화</button>
-        </div>
+        </form>
+        <div style="flex-grow:1"></div>
+        <button onclick="confirmReset()" style="width:100%; margin-top:20px; background:#fff1f2; color:var(--danger); border:1px solid #fee2e2; padding:10px; border-radius:8px; font-size:11px; cursor:pointer; font-weight:600;">🔄 전체 데이터 초기화</button>
     </div>
 
     <div class="card">
         <h2>📊 기술적 분석 차트</h2>
-        <iframe id="chartFrame" style="width:100%; height:480px; border:none; background:#f8fafc; border-radius: 12px;"></iframe>
+        <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div id="stockTabs" style="display:flex; gap:6px; flex-wrap:wrap;">
+                {% for s_name in available_stocks %}
+                <button onclick="changeStock('{{ s_name }}')" id="tab-{{ s_name }}" class="tab-btn {% if loop.first %}active{% endif %}">
+                    {{ s_name }}
+                </button>
+                {% endfor %}
+            </div>
+            <div id="periodTabs" style="display:flex; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+                <button onclick="changePeriod('5d')"  id="p-5d"  class="period-btn active">5일</button>
+                <button onclick="changePeriod('1mo')" id="p-1mo" class="period-btn">1개월</button>
+                <button onclick="changePeriod('3mo')" id="p-3mo" class="period-btn">3개월</button>
+                <button onclick="changePeriod('1y')"  id="p-1y"  class="period-btn">1년</button>
+                <button onclick="changePeriod('max')" id="p-max" class="period-btn">MAX</button>
+            </div>
+        </div>
+        <div class="chart-container">
+            <iframe id="chartFrame" scrolling="no"></iframe>
+        </div>
     </div>
 </div>
 
 <script>
-    /* 스크립트 부분은 기존과 동일하되, 오류 방지를 위해 안전하게 유지합니다 */
     const marketData = { {% for name, info in market_info.items() %}"{{ name }}": { price: {{ info.price }}, currency: "{{ info.currency }}" },{% endfor %} };
-    const holdingsData = { {% for name, qty in holdings.items() %}"{{ name }}": {{ qty }},{% endfor %} };
+    const holdings = { {% for name, qty in holdings.items() %}"{{ name }}": {{ qty }},{% endfor %} };
     const currentCash = {{ cash_raw }};
     const usdRate = {{ usd_rate }};
+    const initialDate = "{{ target_date }}";
+
+    let currentStock = "{{ available_stocks[0] if available_stocks else '' }}";
+    let currentPeriod = "5d";
+
+    // ★ 핵심: 차트 로드 및 버튼 스타일 통합 함수
+    function loadChart() {
+        if (!currentStock) return;
+        const targetDate = document.getElementById('datePicker').value || "";
+        const timestamp = new Date().getTime();
+        const url = `/chart/${encodeURIComponent(currentStock)}/${currentPeriod}?end_date=${targetDate}&t=${timestamp}`;
+        
+        document.getElementById('chartFrame').src = url;
+        
+        // 종목 탭 스타일 업데이트
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.id === `tab-${currentStock}`);
+        });
+        
+        // 기간 버튼 스타일 업데이트
+        document.querySelectorAll('.period-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.id === `p-${currentPeriod}`);
+        });
+    }
+
+    function changeStock(n) { 
+        currentStock = n; 
+        document.getElementById('stockSelect').value = n; 
+        loadChart(); 
+        validateTrade(); 
+    }
+
+    function changePeriod(p) { 
+        currentPeriod = p; 
+        loadChart(); 
+    }
+
+    function validateTrade() {
+        const type = document.getElementById('tradeType').value;
+        let price = parseFloat(document.getElementById('priceInput').value) || 0;
+        const qty = parseInt(document.getElementById('quantityInput').value) || 0;
+        const name = document.getElementById('stockSelect').value;
+        const errorEl = document.getElementById('tradeError');
+        const submitBtn = document.getElementById('submitBtn');
+       
+        let errorMsg = "";
+        if (price <= 0 || qty <= 0) {
+            submitBtn.disabled = true;
+            return;
+        }
+        if (type === "BUY") {
+            const info = marketData[name];
+            const totalCost = info.currency === "USD" ? (price * qty * usdRate) : (price * qty);
+            if (totalCost > currentCash) errorMsg = "❌ 잔액이 부족합니다 (필요: " + Math.round(totalCost).toLocaleString() + "원)";
+        } else {
+            const myQty = holdings[name] || 0;
+            if (qty > myQty) errorMsg = "❌ 보유 수량이 부족합니다 (현재: " + myQty + "주)";
+        }
+        
+        if (errorMsg) {
+            errorEl.innerText = errorMsg;
+            errorEl.style.display = "block";
+            submitBtn.disabled = true;
+        } else {
+            errorEl.style.display = "none";
+            submitBtn.disabled = false;
+        }
+    }
+
+// 1. 날짜가 변경되었을 때 UI를 빨간색으로 바꾸는 함수
+function handleDateChange() {
+    const currentDate = document.getElementById('datePicker').value;
+    const container = document.getElementById('dateContainer');
+    const btn = document.getElementById('dateBtn');
+    const label = document.getElementById('dateLabel');
+
+    if (currentDate !== initialDate) {
+        // 변경 감지 시 빨간색 테마
+        container.style.borderColor = "#ef4444"; // danger color
+        btn.style.background = "#ef4444";
+        btn.innerText = "날짜 변경";
+        label.style.color = "#ef4444";
+    } else {
+        // 원래대로 복구 시 파란색 테마
+        container.style.borderColor = "var(--primary)";
+        btn.style.background = "var(--primary)";
+        btn.innerText = "적용됨";
+        label.style.color = "var(--primary)";
+    }
+}
+
+function goToDate() {
+    const selectedDate = document.getElementById('datePicker').value;
+    location.href = `/?target_date=${selectedDate}`;
+}
+
+    function fillCurrentPrice() {
+        const s = document.getElementById('stockSelect').value;
+        if(marketData[s]) {
+            const price = marketData[s].price;
+            document.getElementById('priceInput').value = parseFloat(price.toFixed(2));
+            validateTrade();
+        }
+    }
 
     function fillMaxQuantity() {
-        const stock = document.getElementById('stockSelect').value;
-        const type = document.getElementById('typeSelect').value;
-        const price = parseFloat(document.getElementById('priceInput').value);
-        if (!price || price <= 0) { alert("단가를 먼저 입력해주세요."); return; }
-        const info = marketData[stock];
-        let maxQty = (type === "BUY") ? Math.floor(currentCash / ((info.currency === "USD") ? (price * usdRate) : price)) : (holdingsData[stock] || 0);
-        document.getElementById('quantityInput').value = maxQty;
-        calculateTotal();
-    }
-
-    function calculateTotal() {
-        const stock = document.getElementById('stockSelect').value;
-        const type = document.getElementById('typeSelect').value;
+        const type = document.getElementById('tradeType').value;
         const price = parseFloat(document.getElementById('priceInput').value) || 0;
-        const qty = parseFloat(document.getElementById('quantityInput').value) || 0;
-        const info = marketData[stock] || {currency: 'KRW'};
-        const totalRaw = price * qty;
-        let totalKRW = (info.currency === "USD") ? (totalRaw * usdRate) : totalRaw;
-        
-        document.getElementById('estimatedTotal').innerText = (info.currency === "USD") ? 
-            `$${totalRaw.toLocaleString(undefined, {minimumFractionDigits: 2})} (약 ${Math.round(totalKRW).toLocaleString()}원)` : 
-            `${Math.round(totalKRW).toLocaleString()}원`;
-
-        const warning = document.getElementById('tradeWarning');
-        const submitBtn = document.getElementById('submitBtn');
-        let errorMsg = (type === "BUY" && totalKRW > currentCash) ? "⚠️ 잔액 부족" : 
-                       (type === "SELL" && qty > (holdingsData[stock] || 0)) ? `⚠️ 보유수량 초과` : "";
-
-        warning.innerText = errorMsg;
-        warning.style.display = errorMsg ? "block" : "none";
-        submitBtn.disabled = !!errorMsg;
-        submitBtn.style.opacity = errorMsg ? 0.5 : 1;
+        const name = document.getElementById('stockSelect').value;
+        if (price <= 0) { alert("먼저 체결 단가를 입력하세요."); return; }
+        if (type === "BUY") {
+            const info = marketData[name];
+            const cost = info.currency === "USD" ? price * usdRate : price;
+            document.getElementById('quantityInput').value = Math.floor(currentCash / cost);
+        } else { 
+            document.getElementById('quantityInput').value = holdings[name] || 0;
+        }
+        validateTrade();
     }
 
-    let searchTimeout;
-    async function doSearch(query) {
-        clearTimeout(searchTimeout);
-        const dropdown = document.getElementById('searchResults');
-        if (query.length < 2) { dropdown.style.display = 'none'; return; }
-        searchTimeout = setTimeout(async () => {
-            const res = await fetch(`/search_ticker?q=${encodeURIComponent(query)}`);
-            const data = await res.json();
-            if (data.length > 0) {
-                dropdown.innerHTML = data.map(item => `<div class="search-item" onclick="selectStock('${item.symbol}', '${item.shortname}')"><strong>${item.symbol}</strong> | ${item.shortname}</div>`).join('');
-                dropdown.style.display = 'block';
+async function doSearch(q) {
+    const box = document.getElementById('searchResults');
+    if(q.length < 2) { box.style.display = 'none'; return; }
+    try {
+        const res = await fetch(`/search_ticker?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        if(data.length > 0) {
+            // i.exchange 정보를 selectStock 함수에 함께 전달하도록 수정
+            box.innerHTML = data.map(i => `
+                <div class="search-item" onclick="selectStock('${i.symbol}','${i.shortname}','${i.exchange}')">
+                    <strong>${i.symbol}</strong> | ${i.shortname} <small style="color:#94a3b8">(${i.exchange})</small>
+                </div>
+            `).join('');
+            box.style.display = 'block';
+        } else { box.style.display = 'none'; }
+    } catch(e) { console.error(e); }
+}
+
+// 2. selectStock 수정: exchange 값을 보고 통화 자동 선택
+function selectStock(t, n, ex) {
+    document.getElementById('selectedName').value = n;
+    document.getElementById('selectedTicker').value = t;
+    document.getElementById('selectionInfo').innerText = `선택됨: ${n} (${t})`;
+    
+    // 통화 선택 select 박스 가져오기
+    const currencySelect = document.querySelector('select[name="currency"]');
+    
+    // 한국 거래소 코드(KSC, KSD)인 경우 KRW로 변경, 그 외는 USD
+    if (ex === "KSC" || ex === "KSD" || t.endsWith(".KS") || t.endsWith(".KQ")) {
+        currencySelect.value = "KRW";
+    } else {
+        currencySelect.value = "USD";
+    }
+
+    document.getElementById('addStockForm').style.display = 'block';
+    document.getElementById('searchResults').style.display = 'none';
+    document.getElementById('tickerSearch').value = t;
+}
+
+// 오늘 날짜로 즉시 복귀하는 함수
+function resetToToday() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    
+    const formattedToday = `${year}-${month}-${day}`;
+    location.href = `/?target_date=${formattedToday}`;
+}
+
+// 종목 삭제 비동기 함수
+async function removeStock(stockName) {
+    if (!confirm(`'${stockName}' 종목을 삭제하시겠습니까?\n관련된 모든 거래 내역이 함께 삭제됩니다.`)) return;
+
+    try {
+        // 백엔드의 @app.post("/delete_stock/{name}") 경로로 요청
+        const response = await fetch(`/delete_stock/${encodeURIComponent(stockName)}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
             }
-        }, 300);
-    }
+        });
 
-    function selectStock(ticker, name) {
-        document.getElementById('selectedName').value = name;
-        document.getElementById('selectedTicker').value = ticker;
-        document.getElementById('tickerSearch').value = name;
-        document.getElementById('searchResults').style.display = 'none';
-        document.getElementById('selectedCurrency').value = (ticker.endsWith('.KS') || ticker.endsWith('.KQ')) ? 'KRW' : 'USD';
-        document.getElementById('selectionInfo').innerHTML = `선택: ${name}`;
-        document.getElementById('addStockForm').style.display = 'block';
+        if (response.redirected) {
+            // 서버에서 RedirectResponse(url="/")를 보냈을 경우 해당 URL로 이동
+            window.location.href = response.url;
+        } else if (response.ok) {
+            // 성공 시 페이지 새로고침
+            window.location.reload();
+        } else {
+            alert("삭제 처리에 실패했습니다.");
+        }
+    } catch (e) {
+        console.error("삭제 요청 중 오류 발생:", e);
+        alert("서버와 통신 중 오류가 발생했습니다.");
     }
+}
 
-    function updateTradeInfo() { calculateTotal(); loadChart(); }
-    function fillCurrentPrice() { 
-        const stock = document.getElementById('stockSelect').value;
-        if (marketData[stock]) { document.getElementById('priceInput').value = marketData[stock].price; calculateTotal(); }
-    }
-    function goToDate() { const date = document.getElementById('datePicker').value; if (date) window.location.href = `/?target_date=${date}`; }
-    function loadChart() {
-        const stock = document.getElementById('stockSelect').value;
-        const targetDate = "{{ target_date if is_backtest else '' }}";
-        let url = `/chart/${encodeURIComponent(stock)}/1d`;
-        if (targetDate) url += `?end_date=${targetDate}`;
-        document.getElementById('chartFrame').src = url;
-    }
-    function confirmReset() { if (confirm("초기화하시겠습니까?")) { const f = document.createElement('form'); f.method='POST'; f.action='/reset'; document.body.appendChild(f); f.submit(); } }
+    function confirmReset() { if(confirm("모든 데이터가 초기화됩니다.")) { const f=document.createElement('form'); f.method='POST'; f.action='/reset'; document.body.appendChild(f); f.submit(); } }
 
-    document.addEventListener('DOMContentLoaded', loadChart);
+    document.addEventListener('DOMContentLoaded', () => {
+        loadChart();
+        validateTrade();
+    });
 </script>
 </body>
 </html>
