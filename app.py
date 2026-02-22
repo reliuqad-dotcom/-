@@ -228,10 +228,45 @@ def get_chart(stock_name: str, period: str, end_date: str = Query(None)):
         fig.add_trace(go.Scatter(x=x_data, y=df['MA20'], line=dict(width=1.2, color='#10b981'), name="20선"))
 
         fig.update_layout(
-            template="plotly_white", margin=dict(l=50, r=10, t=10, b=10), height=500,
-            xaxis_rangeslider_visible=False, showlegend=True,
-            xaxis=dict(type=x_type, tickvals=tick_vals, ticktext=tick_text, gridcolor="#f1f5f9"),
-            yaxis=dict(side="left", tickformat=",d", gridcolor="#f1f5f9")
+            template='plotly_white',
+            margin=dict(l=5, r=5, t=10, b=10), # 여백 극최소화 (모바일 공간 확보)
+            hovermode='x unified',
+            showlegend=True,
+            
+            # --- 범례: 차트 내부 좌측 상단에 콤팩트하게 배치 ---
+            legend=dict(
+                orientation="h",
+                yanchor="top",
+                y=0.98,
+                xanchor="left",
+                x=0.02,
+                font=dict(size=10), # 글자 크기 줄임
+                bgcolor="rgba(255, 255, 255, 0.6)"
+            ),
+            
+            # --- X축: 카테고리 모드에서도 겹침 방지 ---
+            xaxis=dict(
+                type=x_type,
+                showgrid=True,
+                gridcolor='#f1f5f9',
+                # 카테고리 모드일 때 눈금 강제 지정 (tick_vals가 정의된 경우)
+                tickvals=tick_vals if x_type == 'category' else None,
+                ticktext=tick_text if x_type == 'category' else None,
+                tickfont=dict(size=10),
+                automargin=True,
+                rangeslider=dict(visible=False) # 캔들스틱 기본 하단 슬라이더 제거 (공간 확보)
+            ),
+            
+            # --- Y축: 우측 배치로 차트 가독성 향상 ---
+            yaxis=dict(
+                showgrid=True, 
+                gridcolor='#f1f5f9',
+                side="right", 
+                tickfont=dict(size=10),
+                fixedrange=False # Y축 줌 가능하게 설정
+            ),
+            height=400, # 고정 높이 설정 (iframe 내부 최적화)
+            autosize=True
         )
         return HTMLResponse(fig.to_html(full_html=False, include_plotlyjs='cdn'))
     except Exception as e:
