@@ -90,38 +90,50 @@
 
         /* 모바일 최적화 스타일 */
 @media (max-width: 768px) {
-    /* 1. 전체 컨테이너 여백 조정 */
-    .container {
-        padding: 10px;
-        width: 100% !important;
+    /* 1. 테이블의 표 형식을 해제 */
+    table, thead, tbody, th, td, tr {
+        display: block;
     }
 
-    /* 2. 대시보드 카드(자산 현황 등)를 세로로 나열 */
-    .summary-grid {
+    /* 2. 테이블 헤더(제목줄) 숨기기 */
+    thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    /* 3. 각 행을 카드 형태로 디자인 */
+    tr {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        margin-bottom: 15px;
+        padding: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    /* 4. 각 셀을 한 줄씩 배치 */
+    td {
         display: flex;
-        flex-direction: column;
-        gap: 10px;
+        justify-content: space-between; /* 항목 이름은 왼쪽, 값은 오른쪽 */
+        align-items: center;
+        padding: 8px 0;
+        border: none;
+        border-bottom: 1px dashed #f1f5f9;
+        font-size: 14px;
     }
 
-    /* 3. 테이블 찌그러짐 방지: 가로 스크롤 허용 */
-    .table-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+    td:last-child {
+        border-bottom: none;
+        margin-top: 10px;
+        justify-content: center; /* 버튼은 가운데 정렬 */
     }
 
-    table {
-        min-width: 600px; /* 테이블이 너무 압축되지 않게 최소 너비 고정 */
-    }
-
-    /* 4. 차트 높이 조절 */
-    #chart-container {
-        height: 300px !important;
-    }
-
-    /* 5. 버튼 및 입력창 크기 최적화 (터치하기 편하게) */
-    btn, input, select {
-        font-size: 16px !important; /* 모바일 줌 현상 방지 */
-        padding: 12px !important;
+    /* 5. 가짜 라벨 추가 (항목이 무엇인지 표시) */
+    td::before {
+        content: attr(data-label); /* HTML에서 data-label 값을 읽어옴 */
+        font-weight: bold;
+        color: #64748b;
     }
 }
     </style>
@@ -200,18 +212,20 @@
             <table>
                 <thead><tr><th>종목</th><th>가격</th><th>관리</th></tr></thead>
                 <tbody>
-                    {% for name, info in market_info.items() %}
-                    <tr>
-                        <td style="font-weight:600; text-align: left;">{{ name }}</td>
-                        <td style="color:var(--success); font-weight:700; text-align:right;">
-                            {{ info.currency_symbol }}{{ "{:,.2f}".format(info.price) if info.currency == 'USD' else "{:,.0f}".format(info.price) }}
-                        </td>
-                        <td>
-                            <button type="button" onclick="removeStock('{{ name }}')" 
-                                    style="background:none; border:none; color:#cbd5e1; cursor:pointer; font-size: 1.2rem;">✖</button>
-                        </td>
-                    </tr>
-                    {% endfor %}
+{% for name, info in market_info.items() %}
+<tr>
+    <td data-label="종목" style="font-weight:600; text-align: left;">{{ name }}</td>
+    
+    <td data-label="가격" style="color:var(--success); font-weight:700; text-align:right;">
+        {{ info.currency_symbol }}{{ "{:,.2f}".format(info.price) if info.currency == 'USD' else "{:,.0f}".format(info.price) }}
+    </td>
+    
+    <td>
+        <button type="button" onclick="removeStock('{{ name }}')" 
+                style="background:none; border:none; color:#cbd5e1; cursor:pointer; font-size: 1.2rem;">✖</button>
+    </td>
+</tr>
+{% endfor %}
                 </tbody>
             </table>
         </div>
@@ -245,16 +259,19 @@
                     <tr><th style="text-align:left">종목</th><th>보유</th><th style="text-align:right">현재가</th><th style="text-align:right">손익</th></tr>
                 </thead>
                 <tbody>
-                    {% for item in portfolio %}
-                    <tr>
-                        <td style="text-align:left; font-weight:600;">{{ item.name }}</td>
-                        <td style="font-weight:700;">{{ item.quantity }}주</td>
-                        <td style="text-align:right; font-weight:600;">{{ item.currency_symbol }}{{ item.current_price_str }}</td>
-                        <td style="text-align:right; font-weight:800; color: {% if '+' in item.profit_pct_str %}#10b981{% else %}#ef4444{% endif %};">
-                            {{ item.profit_str }}<br><small style="font-size:0.8rem;">({{ item.profit_pct_str }})</small>
-                        </td>
-                    </tr>
-                    {% endfor %}
+ {% for item in portfolio %}
+<tr>
+    <td data-label="종목" style="text-align:left; font-weight:600;">{{ item.name }}</td>
+    
+    <td data-label="보유" style="font-weight:700;">{{ item.quantity }}주</td>
+    
+    <td data-label="현재가" style="text-align:right; font-weight:600;">{{ item.currency_symbol }}{{ item.current_price_str }}</td>
+    
+    <td data-label="손익" style="text-align:right; font-weight:800; color: {% if '+' in item.profit_pct_str %}#10b981{% else %}#ef4444{% endif %};">
+        {{ item.profit_str }}<br><small style="font-size:0.8rem;">({{ item.profit_pct_str }})</small>
+    </td>
+</tr>
+{% endfor %}
                 </tbody>
             </table>
         </div>
