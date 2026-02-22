@@ -29,18 +29,10 @@ def get_db():
         db.close()
 
 def get_user_id(request: Request, response: Response):
+    """쿠키에서 ID를 읽어오고, 없으면 새로 생성만 합니다."""
     user_id = request.cookies.get("user_id")
     if not user_id:
         user_id = str(uuid.uuid4())
-        # 배포 환경을 위해 samesite를 'Lax'로, 보안 환경에 따라 설정을 강화합니다.
-        response.set_cookie(
-            key="user_id", 
-            value=user_id, 
-            max_age=31536000, 
-            httponly=True, 
-            samesite="lax",
-            secure=True  # Render는 HTTPS를 사용하므로 True가 안전합니다.
-        )
     return user_id
 
 # 차트 및 마켓 정보 참조용 고정 데이터
@@ -53,11 +45,12 @@ ticker_map = {
 
 @app.get("/")
 def dashboard(request: Request, response: Response, db: Session = Depends(get_db), target_date: str = Query(None)):
+    # [수정] 인자에서 response 제거하고 내부에서 생성하도록 변경
     uid = get_user_id(request, response)
     now_kst = datetime.now(KST)
     display_date = target_date if target_date else now_kst.strftime("%Y-%m-%d")
 
-    # 1. 초기 종목 세팅 (DB 비어있을 시)
+    # 1. 초기 종목 세팅 (DB 비어있을 시) - 기존 로직 유지
     stocks_in_db = db.query(Stock).filter(Stock.user_id == uid).all()
     if not stocks_in_db:
         for name in ticker_map.keys():
@@ -74,7 +67,7 @@ def dashboard(request: Request, response: Response, db: Session = Depends(get_db
         start_dt = target_dt - timedelta(days=15)
         end_dt = target_dt + timedelta(days=1)
 
-        # 환율 및 마켓 데이터 수집
+        # 환율 및 마켓 데이터 수집 - 기존 로직 유지
         usd_data = yf.download("USDKRW=X", start=start_dt, end=end_dt, progress=False, threads=False)
         if not usd_data.empty:
             if isinstance(usd_data.columns, pd.MultiIndex): usd_data.columns = usd_data.columns.get_level_values(0)
@@ -94,7 +87,7 @@ def dashboard(request: Request, response: Response, db: Session = Depends(get_db
     except Exception as e:
         print(f"Market Data Fetch Error: {e}")
 
-    # 자산 및 포트폴리오 로직
+    # 자산 및 포트폴리오 로직 - 기존 로직 유지
     initial_cash = 10_000_000
     all_tx = db.query(Transaction).filter(Transaction.user_id == uid).all()
     cash_flow = initial_cash
@@ -104,7 +97,6 @@ def dashboard(request: Request, response: Response, db: Session = Depends(get_db
         if tx.type == "DEPOSIT": cash_flow += tx.price
         elif tx.type == "WITHDRAW": cash_flow -= tx.price
         elif tx.type in ("BUY", "SELL"):
-            # 안전하게 종목명 매칭
             stock_obj = db.query(Stock).filter(Stock.id == tx.stock_id).first()
             if not stock_obj: continue
             
@@ -144,7 +136,8 @@ def dashboard(request: Request, response: Response, db: Session = Depends(get_db
 
     total_asset = cash_flow + total_stock_value_krw
 
-    return templates.TemplateResponse("dashboard.html", {
+    # [수정] 응답 객체를 생성하고 보안 쿠키(secure=True)를 설정하여 리턴
+    response = templates.TemplateResponse("dashboard.html", {
         "request": request,
         "available_stocks": user_stock_names,
         "market_info": market_info,
@@ -156,6 +149,18 @@ def dashboard(request: Request, response: Response, db: Session = Depends(get_db
         "usd_rate": round(usd_rate, 2),
         "target_date": display_date
     })
+
+    # Render(HTTPS)에서 이름표(user_id)를 유지하기 위한 핵심 설정
+    response.set_cookie(
+        key="user_id", 
+        value=uid, 
+        max_age=31536000, 
+        httponly=True, 
+        samesite="lax", 
+        secure=True  # 이 부분이 있어야 Render에서 유저를 기억합니다.
+    )
+
+    return response
 
 # --- 차트 로직 (사용자 기존 코드 100% 보존) ---
 @app.get("/chart/{stock_name}/{period}")
